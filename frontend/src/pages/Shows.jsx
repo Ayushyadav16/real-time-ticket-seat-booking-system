@@ -285,10 +285,7 @@ export default function Shows() {
                     <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed #e2e8f0' }}>
                       <button
                         disabled={show.status === 'CANCELLED'}
-                        onClick={() => {
-                          // In Phase 5 this navigates to the seat selection view
-                          alert(`Show selected: ${show.movieTitle} at ${show.theatreName} (${formatTime(show.startTime)}). Seat booking will be enabled in Phase 5!`);
-                        }}
+                        onClick={() => navigate(`/shows/${show.id}/seats`)}
                         style={{
                           width: '100%',
                           padding: '8px 0',
