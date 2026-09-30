@@ -7,8 +7,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Movies from './pages/Movies';
 import Theatres from './pages/Theatres';
+import Shows from './pages/Shows';
 import AdminMovies from './pages/admin/AdminMovies';
 import AdminTheatres from './pages/admin/AdminTheatres';
+import AdminShows from './pages/admin/AdminShows';
 import './App.css';
 
 function App() {
@@ -23,8 +25,10 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/movies" element={<Movies />} />
             <Route path="/theatres" element={<Theatres />} />
+            <Route path="/shows" element={<Shows />} />
             <Route path="/admin/movies" element={<AdminMovies />} />
             <Route path="/admin/theatres" element={<AdminTheatres />} />
+            <Route path="/admin/shows" element={<AdminShows />} />
           </Routes>
           <footer className="footer">
             <p>Real-Time Ticket &amp; Seat Booking System &bull; Version 1.0 Specification Implementation</p>

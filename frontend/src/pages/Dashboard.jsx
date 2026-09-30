@@ -118,25 +118,25 @@ function Dashboard() {
             <span className="phase-status done">Completed</span>
           </div>
 
-          <div className="phase-card active">
+          <div className="phase-card done-card">
             <div className="phase-number">Phase 3</div>
             <h4>Movie &amp; Theatre Management</h4>
-            <p>Admin management of movies, theatres, screens, and seat layouts.</p>
-            <span className="phase-status next">Next Up</span>
+            <p>Admin management of movies, theatres, screens, and seat layouts. <Link to="/movies" style={{ color: '#2563eb', fontWeight: 600 }}>Browse Movies &rarr;</Link></p>
+            <span className="phase-status done">Completed</span>
           </div>
 
-          <div className="phase-card">
+          <div className="phase-card done-card">
             <div className="phase-number">Phase 4</div>
-            <h4>Show Management</h4>
-            <p>Scheduling shows, setting ticket prices, start/end times, and status tracking.</p>
-            <span className="phase-status">Upcoming</span>
+            <h4>Show Management &amp; Scheduling</h4>
+            <p>Screen conflict prevention, automated duration calculation, show filtering. <Link to="/shows" style={{ color: '#2563eb', fontWeight: 600 }}>Explore Shows &rarr;</Link></p>
+            <span className="phase-status done">Completed</span>
           </div>
 
-          <div className="phase-card">
+          <div className="phase-card active">
             <div className="phase-number">Phase 5 &amp; 6</div>
-            <h4>Redis Seat Locking</h4>
-            <p>High-concurrency atomic seat locking with 5-minute TTL to prevent race conditions.</p>
-            <span className="phase-status">Upcoming</span>
+            <h4>Seat Layout &amp; Redis Locking</h4>
+            <p>Interactive seat grid, real-time seat states (AVAILABLE, LOCKED, BOOKED), atomic Redis locking with 5-minute TTL.</p>
+            <span className="phase-status next">Next Up</span>
           </div>
 
           <div className="phase-card">

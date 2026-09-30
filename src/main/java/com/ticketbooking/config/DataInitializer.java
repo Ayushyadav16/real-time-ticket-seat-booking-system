@@ -3,10 +3,13 @@ package com.ticketbooking.config;
 import com.ticketbooking.dto.SeatLayoutGenerateRequest;
 import com.ticketbooking.entity.Movie;
 import com.ticketbooking.entity.Screen;
+import com.ticketbooking.entity.Show;
+import com.ticketbooking.entity.ShowStatus;
 import com.ticketbooking.entity.Theatre;
 import com.ticketbooking.repository.MovieRepository;
 import com.ticketbooking.repository.ScreenRepository;
 import com.ticketbooking.repository.SeatRepository;
+import com.ticketbooking.repository.ShowRepository;
 import com.ticketbooking.repository.TheatreRepository;
 import com.ticketbooking.service.SeatService;
 import org.slf4j.Logger;
@@ -15,6 +18,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,17 +32,20 @@ public class DataInitializer implements CommandLineRunner {
     private final ScreenRepository screenRepository;
     private final SeatRepository seatRepository;
     private final SeatService seatService;
+    private final ShowRepository showRepository;
 
     public DataInitializer(MovieRepository movieRepository,
                            TheatreRepository theatreRepository,
                            ScreenRepository screenRepository,
                            SeatRepository seatRepository,
-                           SeatService seatService) {
+                           SeatService seatService,
+                           ShowRepository showRepository) {
         this.movieRepository = movieRepository;
         this.theatreRepository = theatreRepository;
         this.screenRepository = screenRepository;
         this.seatRepository = seatRepository;
         this.seatService = seatService;
+        this.showRepository = showRepository;
     }
 
     @Override
@@ -105,6 +112,43 @@ public class DataInitializer implements CommandLineRunner {
             seatService.generateSeatsForScreen(inoxScreen1.getId(), layout);
 
             log.info("Successfully seeded Theatres, Screens, and generated Seat layouts.");
+        }
+
+        if (showRepository.count() == 0) {
+            log.info("Seeding initial Shows for scheduled movies...");
+            List<Movie> movies = movieRepository.findAll();
+            List<Screen> screens = screenRepository.findAll();
+
+            if (!movies.isEmpty() && !screens.isEmpty()) {
+                Movie inception = movies.stream().filter(m -> m.getTitle().contains("Inception")).findFirst().orElse(movies.get(0));
+                Movie interstellar = movies.stream().filter(m -> m.getTitle().contains("Interstellar")).findFirst().orElse(movies.get(0));
+                Movie oppenheimer = movies.stream().filter(m -> m.getTitle().contains("Oppenheimer")).findFirst().orElse(movies.get(0));
+
+                Screen screen1 = screens.get(0);
+                Screen screen2 = screens.size() > 1 ? screens.get(1) : screens.get(0);
+                Screen screen3 = screens.size() > 2 ? screens.get(2) : screens.get(0);
+
+                LocalDate today = LocalDate.now();
+                LocalDate tomorrow = today.plusDays(1);
+
+                List<Show> initialShows = Arrays.asList(
+                        // Today shows
+                        new Show(inception, screen1, today.atTime(10, 0), today.atTime(12, 45), ShowStatus.SCHEDULED),
+                        new Show(inception, screen1, today.atTime(14, 0), today.atTime(16, 45), ShowStatus.SCHEDULED),
+                        new Show(interstellar, screen2, today.atTime(11, 0), today.atTime(14, 5), ShowStatus.SCHEDULED),
+                        new Show(interstellar, screen2, today.atTime(18, 0), today.atTime(21, 5), ShowStatus.SCHEDULED),
+                        new Show(oppenheimer, screen3, today.atTime(13, 0), today.atTime(16, 15), ShowStatus.SCHEDULED),
+                        new Show(oppenheimer, screen3, today.atTime(19, 30), today.atTime(22, 45), ShowStatus.SCHEDULED),
+
+                        // Tomorrow shows
+                        new Show(inception, screen1, tomorrow.atTime(10, 0), tomorrow.atTime(12, 45), ShowStatus.SCHEDULED),
+                        new Show(interstellar, screen2, tomorrow.atTime(14, 0), tomorrow.atTime(17, 5), ShowStatus.SCHEDULED),
+                        new Show(oppenheimer, screen3, tomorrow.atTime(18, 0), tomorrow.atTime(21, 15), ShowStatus.SCHEDULED)
+                );
+
+                showRepository.saveAll(initialShows);
+                log.info("Successfully seeded {} shows across today and tomorrow.", initialShows.size());
+            }
         }
     }
 }

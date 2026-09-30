@@ -24,11 +24,13 @@ function Navbar() {
         <Link to="/" className="nav-item">Dashboard</Link>
         <Link to="/movies" className="nav-item">Movies</Link>
         <Link to="/theatres" className="nav-item">Cinemas</Link>
+        <Link to="/shows" className="nav-item">Showtimes</Link>
 
         {isAdmin && (
           <div style={{ display: 'flex', gap: '8px', borderLeft: '1px solid #cbd5e1', paddingLeft: '12px' }}>
             <Link to="/admin/movies" className="nav-item" style={{ color: '#2563eb', fontWeight: '600' }}>Admin: Movies</Link>
             <Link to="/admin/theatres" className="nav-item" style={{ color: '#2563eb', fontWeight: '600' }}>Admin: Theatres</Link>
+            <Link to="/admin/shows" className="nav-item" style={{ color: '#2563eb', fontWeight: '600' }}>Admin: Shows</Link>
           </div>
         )}
 
