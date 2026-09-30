@@ -24,6 +24,8 @@ public class SeatAvailabilityService {
     private final BookingSeatRepository bookingSeatRepository;
     private final SeatLockService seatLockService;
 
+    private final SeatEventBroadcaster seatEventBroadcaster;
+
     @Value("${app.seat.lock-ttl-seconds:300}")
     private long lockTtlSeconds;
 
@@ -35,11 +37,13 @@ public class SeatAvailabilityService {
     public SeatAvailabilityService(ShowService showService,
                                    SeatRepository seatRepository,
                                    BookingSeatRepository bookingSeatRepository,
-                                   SeatLockService seatLockService) {
+                                   SeatLockService seatLockService,
+                                   SeatEventBroadcaster seatEventBroadcaster) {
         this.showService = showService;
         this.seatRepository = seatRepository;
         this.bookingSeatRepository = bookingSeatRepository;
         this.seatLockService = seatLockService;
+        this.seatEventBroadcaster = seatEventBroadcaster;
     }
 
     public BigDecimal getSeatPrice(SeatType seatType) {
@@ -129,6 +133,10 @@ public class SeatAvailabilityService {
         }
 
         LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(lockTtlSeconds);
+
+        // Broadcast real-time seat lock update via WebSocket to all clients watching this show
+        seatEventBroadcaster.broadcastSeatsLocked(showId, seatIds, userId);
+
         return new SeatLockResponse(
                 showId,
                 seatIds,
@@ -141,6 +149,8 @@ public class SeatAvailabilityService {
     public void unlockSeats(Long showId, List<Long> seatIds, Long userId) {
         if (seatIds != null && !seatIds.isEmpty()) {
             seatLockService.unlockSeats(showId, seatIds, userId);
+            // Broadcast real-time seat unlock update via WebSocket
+            seatEventBroadcaster.broadcastSeatsUnlocked(showId, seatIds, userId);
         }
     }
 }

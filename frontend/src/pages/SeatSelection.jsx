@@ -4,11 +4,12 @@ import { seatBookingService } from '../services/seatBookingService';
 import { bookingService } from '../services/bookingService';
 import { showService } from '../services/showService';
 import { useAuth } from '../context/AuthContext';
+import { connectShowSeatSocket } from '../services/websocketService';
 
 export default function SeatSelection() {
   const { showId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [show, setShow] = useState(null);
   const [seats, setSeats] = useState([]);
@@ -16,6 +17,7 @@ export default function SeatSelection() {
   const [submittingBooking, setSubmittingBooking] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [wsConnected, setWsConnected] = useState(false);
 
   // Local selection before locking
   const [selectedSeatIds, setSelectedSeatIds] = useState([]);
@@ -53,6 +55,71 @@ export default function SeatSelection() {
   useEffect(() => {
     loadData();
   }, [showId]);
+
+  // Real-Time WebSocket Seat Updates
+  useEffect(() => {
+    if (!showId) return;
+
+    const socketHandle = connectShowSeatSocket(
+      showId,
+      (event) => {
+        const affectedIds = new Set(event.seatIds || []);
+        const myUserId = user?.userId;
+
+        setSeats((prevSeats) =>
+          prevSeats.map((seat) => {
+            if (!affectedIds.has(seat.seatId)) return seat;
+
+            if (event.action === 'LOCKED') {
+              const isMine = myUserId && myUserId === event.userId;
+              return {
+                ...seat,
+                status: 'LOCKED',
+                lockedByCurrentUser: isMine,
+                lockExpiresInSeconds: 300,
+              };
+            } else if (event.action === 'UNLOCKED' || event.action === 'RELEASED') {
+              return {
+                ...seat,
+                status: 'AVAILABLE',
+                lockedByCurrentUser: false,
+                lockExpiresInSeconds: null,
+              };
+            } else if (event.action === 'BOOKED') {
+              return {
+                ...seat,
+                status: 'BOOKED',
+                lockedByCurrentUser: false,
+                lockExpiresInSeconds: null,
+              };
+            }
+            return seat;
+          })
+        );
+
+        // If seats were locked or booked by someone else, deselect them from my local unheld selection
+        if (event.action === 'LOCKED' || event.action === 'BOOKED') {
+          const isMine = myUserId && myUserId === event.userId;
+          if (!isMine) {
+            setSelectedSeatIds((prevSelected) => {
+              const remaining = prevSelected.filter((id) => !affectedIds.has(id));
+              if (remaining.length !== prevSelected.length) {
+                setError('A seat in your selection was just locked/booked by another customer.');
+              }
+              return remaining;
+            });
+          }
+        }
+      },
+      (status) => {
+        setWsConnected(status === 'CONNECTED');
+      }
+    );
+
+    return () => {
+      socketHandle.disconnect();
+    };
+  }, [showId, user]);
 
   // Timer countdown
   useEffect(() => {
@@ -190,12 +257,36 @@ export default function SeatSelection() {
             </p>
           </div>
 
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#2563eb' }}>
-              {new Date(show.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '9999px',
+              backgroundColor: wsConnected ? '#ecfdf5' : '#f8fafc',
+              border: wsConnected ? '1px solid #a7f3d0' : '1px solid #e2e8f0',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              color: wsConnected ? '#059669' : '#64748b'
+            }}>
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: wsConnected ? '#10b981' : '#94a3b8',
+                boxShadow: wsConnected ? '0 0 0 3px rgba(16, 185, 129, 0.25)' : 'none',
+                display: 'inline-block'
+              }} />
+              {wsConnected ? 'Live Seat Sync Active' : 'Connecting Sync...'}
             </div>
-            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-              {new Date(show.startTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+            <div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#2563eb' }}>
+                {new Date(show.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                {new Date(show.startTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+              </div>
             </div>
           </div>
         </div>

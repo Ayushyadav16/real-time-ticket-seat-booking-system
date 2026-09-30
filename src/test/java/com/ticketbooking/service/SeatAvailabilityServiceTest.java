@@ -38,6 +38,9 @@ class SeatAvailabilityServiceTest {
     @Mock
     private SeatLockService seatLockService;
 
+    @Mock
+    private SeatEventBroadcaster seatEventBroadcaster;
+
     @InjectMocks
     private SeatAvailabilityService seatAvailabilityService;
 

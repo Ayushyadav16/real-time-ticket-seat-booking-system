@@ -54,6 +54,9 @@ class BookingServiceTest {
     @Mock
     private BookingEventPublisher eventPublisher;
 
+    @Mock
+    private SeatEventBroadcaster seatEventBroadcaster;
+
     @InjectMocks
     private BookingService bookingService;
 

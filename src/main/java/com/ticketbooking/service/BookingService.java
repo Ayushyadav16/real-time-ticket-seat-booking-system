@@ -33,6 +33,7 @@ public class BookingService {
     private final SeatLockService seatLockService;
     private final SeatAvailabilityService seatAvailabilityService;
     private final BookingEventPublisher eventPublisher;
+    private final SeatEventBroadcaster seatEventBroadcaster;
 
     public BookingService(BookingRepository bookingRepository,
                           BookingSeatRepository bookingSeatRepository,
@@ -41,7 +42,8 @@ public class BookingService {
                           SeatRepository seatRepository,
                           SeatLockService seatLockService,
                           SeatAvailabilityService seatAvailabilityService,
-                          BookingEventPublisher eventPublisher) {
+                          BookingEventPublisher eventPublisher,
+                          SeatEventBroadcaster seatEventBroadcaster) {
         this.bookingRepository = bookingRepository;
         this.bookingSeatRepository = bookingSeatRepository;
         this.userRepository = userRepository;
@@ -50,6 +52,7 @@ public class BookingService {
         this.seatLockService = seatLockService;
         this.seatAvailabilityService = seatAvailabilityService;
         this.eventPublisher = eventPublisher;
+        this.seatEventBroadcaster = seatEventBroadcaster;
     }
 
     @Transactional
@@ -132,6 +135,9 @@ public class BookingService {
         );
         eventPublisher.publishBookingCreated(event);
 
+        // 9. Broadcast real-time seat booked event via WebSocket
+        seatEventBroadcaster.broadcastSeatsBooked(show.getId(), request.getSeatIds(), user.getId(), savedBooking.getBookingReference());
+
         return BookingResponse.fromEntity(savedBooking);
     }
 
@@ -181,6 +187,12 @@ public class BookingService {
                 updated.getTotalAmount()
         );
         eventPublisher.publishBookingCancelled(event);
+
+        // Broadcast real-time seat released event via WebSocket
+        List<Long> freedSeatIds = updated.getBookingSeats().stream()
+                .map(bs -> bs.getSeat().getId())
+                .collect(Collectors.toList());
+        seatEventBroadcaster.broadcastSeatsReleased(updated.getShow().getId(), freedSeatIds, updated.getUser().getId());
 
         return BookingResponse.fromEntity(updated);
     }
