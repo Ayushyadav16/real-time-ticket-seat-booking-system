@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { seatBookingService } from '../services/seatBookingService';
+import { bookingService } from '../services/bookingService';
 import { showService } from '../services/showService';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,6 +13,7 @@ export default function SeatSelection() {
   const [show, setShow] = useState(null);
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submittingBooking, setSubmittingBooking] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -123,6 +125,24 @@ export default function SeatSelection() {
       loadData();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to unlock seats.');
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    if (lockedSeatIds.length === 0) return;
+    try {
+      setSubmittingBooking(true);
+      setError('');
+      const resp = await bookingService.createBooking(showId, lockedSeatIds);
+      navigate('/my-bookings', {
+        state: {
+          message: `Booking Confirmed! Reference: ${resp.bookingReference}. A notification has been dispatched.`
+        }
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to complete booking.');
+    } finally {
+      setSubmittingBooking(false);
     }
   };
 
@@ -445,21 +465,20 @@ export default function SeatSelection() {
                   Release Seats
                 </button>
                 <button
-                  onClick={() => {
-                    alert(`Seats ${activeSeats.map(s => s.rowLabel + s.seatNumber).join(', ')} successfully locked! Booking confirmation and payment order will be executed in Phase 7!`);
-                  }}
+                  disabled={submittingBooking}
+                  onClick={handleConfirmBooking}
                   style={{
-                    background: '#10b981',
+                    background: submittingBooking ? '#6ee7b7' : '#10b981',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '8px',
                     fontWeight: 'bold',
                     fontSize: '1rem',
-                    cursor: 'pointer'
+                    cursor: submittingBooking ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  Proceed to Payment &rarr;
+                  {submittingBooking ? 'Confirming Booking...' : 'Proceed to Payment & Confirm \u2192'}
                 </button>
               </div>
             )}

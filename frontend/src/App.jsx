@@ -9,6 +9,7 @@ import Movies from './pages/Movies';
 import Theatres from './pages/Theatres';
 import Shows from './pages/Shows';
 import SeatSelection from './pages/SeatSelection';
+import BookingHistory from './pages/BookingHistory';
 import AdminMovies from './pages/admin/AdminMovies';
 import AdminTheatres from './pages/admin/AdminTheatres';
 import AdminShows from './pages/admin/AdminShows';
@@ -28,6 +29,7 @@ function App() {
             <Route path="/theatres" element={<Theatres />} />
             <Route path="/shows" element={<Shows />} />
             <Route path="/shows/:showId/seats" element={<SeatSelection />} />
+            <Route path="/my-bookings" element={<BookingHistory />} />
             <Route path="/admin/movies" element={<AdminMovies />} />
             <Route path="/admin/theatres" element={<AdminTheatres />} />
             <Route path="/admin/shows" element={<AdminShows />} />

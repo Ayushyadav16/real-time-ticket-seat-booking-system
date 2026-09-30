@@ -36,6 +36,9 @@ function Navbar() {
 
         {isAuthenticated ? (
           <div className="user-profile-menu">
+            <Link to="/my-bookings" className="nav-item" style={{ fontWeight: '600', color: '#2563eb' }}>
+              🎟️ My Tickets
+            </Link>
             <span className={`role-badge ${isAdmin ? 'admin-badge' : 'customer-badge'}`}>
               {isAdmin ? '👑 ADMIN' : '👤 CUSTOMER'}
             </span>
