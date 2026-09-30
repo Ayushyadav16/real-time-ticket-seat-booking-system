@@ -16,7 +16,8 @@ import {
   ZapIcon,
   SparklesIcon,
   ClockIcon,
-  MapPinIcon
+  MapPinIcon,
+  LockClosedIcon
 } from '../../components/Icons';
 import '../../styles/dashboard.css';
 
@@ -35,10 +36,10 @@ export default function AdminDashboard() {
   const [upcomingShows, setUpcomingShows] = useState([]);
 
   // Safe wrapper to prevent crashes when backend or individual endpoints are offline
-  const safe = async (requestPromise, fallback) => {
+  const safe = async (requestFn, fallback) => {
     try {
-      const res = await requestPromise;
-      return res.data || fallback;
+      const res = await requestFn();
+      return Array.isArray(res.data) ? res.data : (res.data || fallback);
     } catch (err) {
       console.warn('Admin API query degraded safely:', err?.message || err);
       return fallback;
@@ -53,35 +54,45 @@ export default function AdminDashboard() {
 
       const todayStr = new Date().toISOString().split('T')[0];
 
-      const [movies, theatres, screens, shows, adminBookings] = await Promise.all([
-        safe(api.get('/movies'), []),
-        safe(api.get('/theatres'), []),
-        safe(api.get('/screens'), []),
-        safe(api.get('/shows'), []),
-        safe(api.get('/bookings/admin'), [])
+      const [movies, theatres, shows, adminBookings] = await Promise.all([
+        safe(() => api.get('/movies'), []),
+        safe(() => api.get('/theatres'), []),
+        safe(() => api.get('/shows'), []),
+        safe(() => api.get('/bookings/admin'), [])
       ]);
 
       if (!isMounted) return;
 
+      const showsList = Array.isArray(shows) ? shows : [];
+      const bookingsList = Array.isArray(adminBookings) ? adminBookings : [];
+      const theatresList = Array.isArray(theatres) ? theatres : [];
+      const moviesList = Array.isArray(movies) ? movies : [];
+
       // Filter shows for today
-      const showsToday = shows.filter((s) => {
-        if (!s.startTime) return false;
+      const showsToday = showsList.filter((s) => {
+        if (!s || !s.startTime) return false;
         return s.startTime.startsWith(todayStr);
       });
 
       // Filter upcoming shows for table (sorted by startTime ascending)
-      const sortedShows = [...shows].sort((a, b) => new Date(a.startTime) - new Date(b.startTime)).slice(0, 5);
+      const sortedShows = [...showsList]
+        .filter((s) => s && s.startTime)
+        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+        .slice(0, 5);
 
       // Calculate confirmed revenue
-      const confirmed = adminBookings.filter((b) => b.status === 'CONFIRMED');
+      const confirmed = bookingsList.filter((b) => b && b.status === 'CONFIRMED');
       const revenue = confirmed.reduce((sum, b) => sum + (parseFloat(b.totalAmount) || 0), 0);
 
+      // Compute total screens across all theatres
+      const totalScreens = theatresList.reduce((sum, t) => sum + (t.screenCount || 0), 0);
+
       setStats({
-        moviesCount: movies.length,
-        theatresCount: theatres.length,
-        screensCount: screens.length,
+        moviesCount: moviesList.length,
+        theatresCount: theatresList.length,
+        screensCount: totalScreens,
         showsTodayCount: showsToday.length,
-        bookingsCount: adminBookings.length,
+        bookingsCount: bookingsList.length,
         totalRevenue: revenue,
       });
 
