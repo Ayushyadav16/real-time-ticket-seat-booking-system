@@ -73,4 +73,11 @@ public class BookingController {
         boolean isAdmin = user.getRole() == Role.ADMIN;
         return ResponseEntity.ok(bookingService.cancelBooking(id, user.getId(), isAdmin));
     }
+
+    @GetMapping("/admin")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<BookingResponse>> getAdminBookings(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        return ResponseEntity.ok(bookingService.getAllBookings(date));
+    }
 }

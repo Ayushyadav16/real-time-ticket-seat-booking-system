@@ -28,6 +28,7 @@ function Navbar() {
 
         {isAdmin && (
           <div style={{ display: 'flex', gap: '8px', borderLeft: '1px solid #cbd5e1', paddingLeft: '12px' }}>
+            <Link to="/admin/bookings" className="nav-item" style={{ color: '#059669', fontWeight: 'bold' }}>📊 Bookings &amp; Revenue</Link>
             <Link to="/admin/movies" className="nav-item" style={{ color: '#2563eb', fontWeight: '600' }}>Admin: Movies</Link>
             <Link to="/admin/theatres" className="nav-item" style={{ color: '#2563eb', fontWeight: '600' }}>Admin: Theatres</Link>
             <Link to="/admin/shows" className="nav-item" style={{ color: '#2563eb', fontWeight: '600' }}>Admin: Shows</Link>

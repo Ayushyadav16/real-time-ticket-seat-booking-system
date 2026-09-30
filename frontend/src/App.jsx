@@ -13,6 +13,7 @@ import BookingHistory from './pages/BookingHistory';
 import AdminMovies from './pages/admin/AdminMovies';
 import AdminTheatres from './pages/admin/AdminTheatres';
 import AdminShows from './pages/admin/AdminShows';
+import AdminBookings from './pages/admin/AdminBookings';
 import './App.css';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/shows" element={<Shows />} />
             <Route path="/shows/:showId/seats" element={<SeatSelection />} />
             <Route path="/my-bookings" element={<BookingHistory />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/movies" element={<AdminMovies />} />
             <Route path="/admin/theatres" element={<AdminTheatres />} />
             <Route path="/admin/shows" element={<AdminShows />} />

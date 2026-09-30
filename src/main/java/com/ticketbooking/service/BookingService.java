@@ -196,4 +196,15 @@ public class BookingService {
 
         return BookingResponse.fromEntity(updated);
     }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getAllBookings(java.time.LocalDate showDate) {
+        List<Booking> bookings = bookingRepository.findAllByOrderByCreatedAtDesc();
+        if (showDate != null) {
+            bookings = bookings.stream()
+                    .filter(b -> b.getShow() != null && b.getShow().getStartTime().toLocalDate().equals(showDate))
+                    .collect(Collectors.toList());
+        }
+        return bookings.stream().map(BookingResponse::fromEntity).collect(Collectors.toList());
+    }
 }

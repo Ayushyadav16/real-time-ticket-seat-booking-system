@@ -1,8 +1,7 @@
 import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
 /**
- * Subscribes to real-time seat status updates for a specific show.
+ * Subscribes to real-time seat status updates for a specific show using native browser WebSocket.
  *
  * @param {string|number} showId The show identifier to subscribe to
  * @param {Function} onSeatEvent Callback when a seat status event arrives (LOCKED, UNLOCKED, BOOKED, RELEASED)
@@ -10,20 +9,17 @@ import SockJS from 'sockjs-client';
  * @returns {{ disconnect: () => void }} Object to disconnect and clean up subscription
  */
 export function connectShowSeatSocket(showId, onSeatEvent, onStatusChange) {
-  const socketUrl = 'http://127.0.0.1:8080/ws-booking';
+  // Use native WebSocket endpoint supported by Spring Boot
+  const brokerURL = 'ws://127.0.0.1:8080/ws-booking';
 
   const client = new Client({
-    webSocketFactory: () => new SockJS(socketUrl),
+    brokerURL: brokerURL,
     reconnectDelay: 4000,
     heartbeatIncoming: 5000,
     heartbeatOutgoing: 5000,
-    debug: (str) => {
-      // debug logs suppressed in production, available for tracing
-      // console.log('[STOMP]', str);
-    },
     onConnect: () => {
       if (onStatusChange) onStatusChange('CONNECTED');
-      console.log(`[WebSocket] Connected. Subscribing to show ${showId} seats.`);
+      console.log(`[WebSocket] Connected via STOMP to show ${showId}`);
 
       client.subscribe(`/topic/shows/${showId}/seats`, (message) => {
         try {
@@ -40,15 +36,24 @@ export function connectShowSeatSocket(showId, onSeatEvent, onStatusChange) {
       if (onStatusChange) onStatusChange('DISCONNECTED');
     },
     onStompError: (frame) => {
-      console.error('[WebSocket] STOMP Broker error:', frame.headers['message']);
+      console.error('[WebSocket] STOMP Broker error:', frame.headers?.['message']);
       if (onStatusChange) onStatusChange('ERROR');
     },
     onWebSocketClose: () => {
       if (onStatusChange) onStatusChange('DISCONNECTED');
     },
+    onWebSocketError: (error) => {
+      console.warn('[WebSocket] Connection warning:', error);
+      if (onStatusChange) onStatusChange('ERROR');
+    }
   });
 
-  client.activate();
+  try {
+    client.activate();
+  } catch (err) {
+    console.error('[WebSocket] Activation failed:', err);
+    if (onStatusChange) onStatusChange('ERROR');
+  }
 
   return {
     disconnect: () => {
