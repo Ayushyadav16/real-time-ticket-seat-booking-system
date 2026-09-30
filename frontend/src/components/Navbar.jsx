@@ -16,7 +16,7 @@ function Navbar() {
       <div className="brand">
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span className="logo-icon">🎟️</span>
-          <h1>TicketHub Real-Time</h1>
+          <h1>Book My Seat</h1>
         </Link>
       </div>
 

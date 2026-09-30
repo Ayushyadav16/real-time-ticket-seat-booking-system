@@ -37,7 +37,7 @@ function App() {
             <Route path="/admin/shows" element={<AdminShows />} />
           </Routes>
           <footer className="footer">
-            <p>Real-Time Ticket &amp; Seat Booking System &bull; Version 1.0 Specification Implementation</p>
+            <p>Book My Seat &bull; Real-Time Cinema &amp; Event Booking</p>
           </footer>
         </div>
       </Router>
